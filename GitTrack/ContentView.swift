@@ -14,6 +14,7 @@ struct ContentView: View {
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Hello, world!")
+            Text("An Start for Yashwanth").font(Font.largeTitle)
         }
         .padding()
     }
@@ -22,3 +23,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
+
