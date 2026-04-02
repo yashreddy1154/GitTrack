@@ -1,36 +1,131 @@
-# GitTrack 🚀
+# 🔍 GitTrack
 
-GitTrack is a native iOS application built to quickly explore GitHub profiles and repositories. Developed entirely in Swift using modern SwiftUI, this project leverages an MVVM architecture and `URLSession` to interact asynchronously with the GitHub REST API. It allows users to search for any GitHub handle, instantly view their profile avatar, and scroll through a dynamic, interactive list of their public repositories.
+**A modern iOS app to explore GitHub user profiles and repositories.**
 
-## 🎥 App Demo
-[Watch the video demo on YouTube here](https://youtube.com/shorts/bSlmRkjJWLI)
+Built with 100% native Apple frameworks as a portfolio project demonstrating clean SwiftUI architecture, async networking, and thoughtful UI design.
 
-## 🛠️ Tech Stack
-* **Language:** Swift
-* **UI Framework:** SwiftUI
-* **Architecture:** MVVM (Model-View-ViewModel)
-* **Networking:** `URLSession` with `async/await`
-* **Data Parsing:** `Codable` (JSONDecoder)
+> **Target:** iOS 17+ · **Language:** Swift 5.9+ · **UI:** SwiftUI
 
-## ⚙️ Installation & Setup (Important)
-To run this project locally, you must provide your own GitHub Personal Access Token (PAT) to bypass the API rate limits.
+---
 
-1. Clone this repository to your local machine.
-2. Locate the `Secrets-Sample.plist` file in the project directory.
-3. Rename the file to **`Secrets.plist`**.
-4. Open the file and replace `"PASTE_YOUR_GITHUB_PAT_HERE"` with your actual GitHub token (it should start with `ghp_...`).
-5. Build and run the project in Xcode!
-*(Note: `Secrets.plist` is already included in the `.gitignore` to prevent accidental uploads of your personal token).*
+## ✨ Features
 
-## 🚀 Current Features
-* Live search functionality for GitHub users.
-* Asynchronous image loading (`AsyncImage`) for user avatars.
-* Clean, declarative UI using SwiftUI `List` and `NavigationStack`.
-* Direct in-app web routing to individual repositories.
-* Responsive loading states and error handling.
-* **Smart Header:** A responsive profile dashboard that smoothly collapses into a compact sticky navigation bar when scrolling through repositories.
+| Feature | Description |
+|---|---|
+| 🔎 **User Search** | Search any GitHub username to view their profile and public repositories. |
+| 🧠 **Smart Collapsing Header** | A full profile dashboard that smoothly collapses into a compact sticky header as you scroll — inspired by apps like Twitter/X. |
+| ♾️ **Infinite Scrolling** | Repositories load page-by-page (30 at a time) as you scroll, using simple cursor-based pagination. |
+| 🔤 **Local Sorting** | Sort repos by **Most Stars** or **Alphabetically** via a toolbar menu — instant, no extra API calls. |
+| 🕐 **Recent Searches** | Your last 5 searches are saved locally and shown as quick-access capsule buttons below the search bar. |
+| 📄 **Repository Detail View** | Tap any repo to see its stats (language, stars, forks) in a polished detail screen with a **"View on GitHub"** button and a native **Share** sheet. |
+| 🌙 **Dark Mode** | Ships with a sleek dark-mode-first design. |
 
-## 🗺️ Planned Features
-I am actively expanding this project to learn deeper iOS concepts. Upcoming features include:
-* **Sorting & Filtering:** Adding the ability to sort repositories by star count or filter by primary programming language.
-* **Pagination:** Implementing infinite scrolling to smoothly load users with hundreds of repositories.
+---
+
+## 🏗️ Architecture
+
+```
+GitTrack/
+├── GitTrackApp.swift          # App entry point
+├── Models/
+│   └── Models.swift           # UserProfile & Repository (Codable structs)
+├── ViewModels/
+│   └── GitHubViewModel.swift  # MVVM business logic, networking, pagination
+└── Views/
+    ├── ContentView.swift      # Main search screen with smart header
+    └── RepoDetailView.swift   # Repository detail screen
+```
+
+### 📐 MVVM Pattern
+
+The app follows a standard **Model–View–ViewModel** architecture:
+
+- **Model** → Simple `Codable` structs that map directly to the GitHub API JSON.
+- **ViewModel** → A single `@MainActor ObservableObject` that owns all state and networking logic.
+- **View** → Declarative SwiftUI views that read from the ViewModel's `@Published` properties.
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **UI** | SwiftUI (NavigationStack, AsyncImage, ShareLink) |
+| **Networking** | URLSession + async/await |
+| **Data** | Codable structs with CodingKeys |
+| **Persistence** | @AppStorage / UserDefaults |
+| **Concurrency** | Swift structured concurrency (async/await) |
+| **Min Deployment** | iOS 17.0 |
+
+---
+
+## 💡 Engineering Decisions
+
+> *"Why didn't you use Alamofire / CoreData / SwiftData / Realm?"*
+
+This was a deliberate choice. Here's why:
+
+- **URLSession over Alamofire** — Apple's native `URLSession` with `async/await` is clean, lightweight, and requires zero dependencies. For a project that makes 2–3 simple GET requests, adding a networking library would be unnecessary overhead. Understanding `URLSession` is a fundamental skill.
+
+- **Codable structs over CoreData / SwiftData / Realm** — The app doesn't need a persistent database. All data is fetched fresh from the API and displayed immediately. Using a database would add complexity (schemas, migrations, contexts) with zero user-facing benefit.
+
+- **@AppStorage over a database** — Recent searches are just strings. A comma-separated `UserDefaults` entry is the right tool for the job — simple, native, and zero boilerplate.
+
+- **No DTOs or abstraction layers** — The `Codable` structs decode directly from the API response. Adding Data Transfer Objects would be enterprise-level indirection that adds lines of code without adding value at this scale.
+
+**The goal:** Master Apple's native frameworks first. Add third-party tools only when they solve a real problem.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Xcode 15+ (with iOS 17 SDK)
+- A GitHub account (for an optional Personal Access Token)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/GitTrack.git
+   cd GitTrack
+   ```
+
+2. **Set up the API token (optional but recommended):**
+
+   GitHub's public API has a rate limit of **60 requests/hour** for unauthenticated users. To increase this to **5,000 requests/hour**, add a Personal Access Token:
+
+   - Go to [GitHub → Settings → Developer Settings → Personal Access Tokens → Tokens (classic)](https://github.com/settings/tokens).
+   - Generate a new token with **no special scopes** (public access is enough).
+   - In the Xcode project, find the file `Secrets-Sample.plist`.
+   - **Duplicate** it and rename the copy to `Secrets.plist`.
+   - Open `Secrets.plist` and paste your token as the value for `GitHubToken`.
+
+   > ⚠️ `Secrets.plist` is listed in `.gitignore` — your token will **never** be committed.
+
+3. **Open and run:**
+   ```
+   open GitTrack.xcodeproj
+   ```
+   Select an iOS 17+ simulator and hit **⌘R**.
+
+---
+
+## 📸 Screenshots
+
+<!-- Add your simulator screenshots here -->
+<!-- ![Home Screen](screenshots/home.png) -->
+<!-- ![Detail View](screenshots/detail.png) -->
+
+*Coming soon — screenshots will be added after final UI polish.*
+
+---
+
+## 📝 License
+
+This project is open source and available for learning purposes.
+
+---
+
+*Built with ❤️ using SwiftUI as a portfolio project for iOS internship preparation.*
