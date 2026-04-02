@@ -29,9 +29,33 @@
 		BF5168EA2F7C16C3003E3242 /* GitTrackUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GitTrackUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BF9D3F5D2F7E72EC005AE19C /* Exceptions for "GitTrack" folder in "GitTrack" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Secrets.plist,
+			);
+			target = BF5168D22F7C16C1003E3242 /* GitTrack */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		BF9D3F5E2F7E72EC005AE19C /* Exceptions for "GitTrack" folder in "Compile Sources" phase from "GitTrack" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = BF5168CF2F7C16C1003E3242 /* Sources */;
+			membershipExceptions = (
+				Secrets.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BF5168D52F7C16C1003E3242 /* GitTrack */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BF9D3F5D2F7E72EC005AE19C /* Exceptions for "GitTrack" folder in "GitTrack" target */,
+				BF9D3F5E2F7E72EC005AE19C /* Exceptions for "GitTrack" folder in "Compile Sources" phase from "GitTrack" target */,
+			);
 			path = GitTrack;
 			sourceTree = "<group>";
 		};

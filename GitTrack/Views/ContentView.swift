@@ -1,23 +1,16 @@
-//
-//  ContentView.swift
-//  GitTrack
-//
-//  Created by Yashwanth Reddy on 31/3/2026.
-//
-
-
 import SwiftUI
 
 struct ContentView: View {
-    // This connects your View to your ViewModel
     @StateObject private var viewModel = GitHubViewModel()
-    
-    // This watches what the user types in the search bar
     @State private var username: String = ""
+    
+    // NEW: Tracks if the big profile has been scrolled off-screen
+    @State private var isProfileVisible: Bool = true
     
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 0) { // spacing: 0 keeps the transitions tight
+                
                 // 1. THE SEARCH BAR
                 HStack {
                     TextField("Enter GitHub Username", text: $username)
@@ -26,7 +19,6 @@ struct ContentView: View {
                         .disableAutocorrection(true)
                     
                     Button("Search") {
-                        // When tapped, trigger the async network call
                         Task {
                             await viewModel.fetchRepos(for: username)
                         }
@@ -35,79 +27,162 @@ struct ContentView: View {
                 }
                 .padding()
                 
-                // 2. THE PROFILE PICTURE (Only shows if there are repos)
-                if !viewModel.repositories.isEmpty && !viewModel.isLoading {
-                    AsyncImage(url: URL(string: "https://github.com/\(username).png")) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        ProgressView()
+                // 2. THE COMPACT STICKY HEADER
+                // This ONLY appears when the big profile scrolls off-screen
+                if let user = viewModel.userProfile, !viewModel.isLoading, !isProfileVisible {
+                    HStack {
+                        AsyncImage(url: URL(string: user.avatar_url)) { image in
+                            image.resizable().scaledToFill()
+                        } placeholder: {
+                            ProgressView()
+                        }
+                        .frame(width: 36, height: 36)
+                        .clipShape(Circle())
+                        
+                        Text(user.login)
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
                     }
-                    .frame(width: 80, height: 80)
-                    .clipShape(Circle())
-                    .shadow(radius: 5)
-                    .padding(.bottom, 10)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                    // This creates the smooth slide-down animation
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
-                // 3. THE LIST AREA (Loading vs Empty vs Populated)
+                Divider() // Adds a clean line under the search/sticky area
+                
+                // 3. THE MAIN CONTENT AREA
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView("Fetching Repos...")
+                    ProgressView("Fetching Data...")
                         .scaleEffect(1.2)
                     Spacer()
+                    
+                } else if let errorMessage = viewModel.errorMessage {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.largeTitle)
+                            .foregroundColor(.red)
+                        Text(errorMessage)
+                            .font(.headline)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    Spacer()
+                    
                 } else if viewModel.repositories.isEmpty {
                     Spacer()
                     Text("Search for a user to see their repositories.")
                         .foregroundColor(.gray)
                     Spacer()
+                    
                 } else {
-                    List(viewModel.repositories) { repo in
+                    
+                    // 4. THE SCROLLING LIST
+                    // By opening the List block, we can put multiple different things inside it
+                    List {
                         
-                        // 4. THE TAPPABLE LINK
-                        if let repoURL = URL(string: repo.html_url) {
-                            Link(destination: repoURL) {
+                        // --- A. THE BIG PROFILE DASHBOARD ---
+                        if let user = viewModel.userProfile {
+                            VStack(spacing: 8) {
+                                AsyncImage(url: URL(string: user.avatar_url)) { image in
+                                    image.resizable().scaledToFill()
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 90, height: 90)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
                                 
-                                // --- THE ROW UI ---
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(repo.name)
-                                        .font(.headline)
-                                        .fontWeight(.bold)
-                                    
-                                    if let description = repo.description {
-                                        Text(description)
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    HStack {
-                                        Image(systemName: "star.fill")
-                                            .foregroundColor(.yellow)
-                                        Text("\(repo.stargazers_count)")
-                                            .font(.caption)
+                                if let name = user.name {
+                                    Text(name).font(.title2).fontWeight(.bold)
+                                }
+                                
+                                Text("@\(user.login)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                if let bio = user.bio {
+                                    Text(bio)
+                                        .font(.footnote)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.top, 4)
+                                }
+                                
+                                HStack(spacing: 20) {
+                                    Label("\(user.followers) Followers", systemImage: "person.2.fill")
+                                    Label("\(user.following) Following", systemImage: "person.fill.checkmark")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.top, 8)
+                            }
+                            .frame(maxWidth: .infinity) // Centers the profile
+                            .padding(.vertical, 10)
+                            .listRowSeparator(.hidden) // Removes the line under the profile
+                            .listRowBackground(Color.clear)
+                            
+                            // NEW: THE TRIGGERS
+                            // When this block appears/disappears, it flips the switch to animate the compact header
+                            .onAppear {
+                                withAnimation(.easeInOut(duration: 0.2)) { isProfileVisible = true }
+                            }
+                            .onDisappear {
+                                withAnimation(.easeInOut(duration: 0.2)) { isProfileVisible = false }
+                            }
+                        }
+                        // ------------------------------------
+                        
+                        
+                        // --- B. THE REPOSITORIES ---
+                        ForEach(viewModel.repositories) { repo in
+                            if let repoURL = URL(string: repo.html_url) {
+                                Link(destination: repoURL) {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(repo.name)
+                                            .font(.headline)
+                                            .fontWeight(.bold)
                                         
-                                        Spacer()
+                                        if let description = repo.description {
+                                            Text(description)
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
                                         
-                                        if let language = repo.language {
-                                            Text(language)
-                                                .font(.caption)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.blue.opacity(0.1))
-                                                .cornerRadius(6)
+                                        HStack {
+                                            Image(systemName: "star.fill")
+                                                .foregroundColor(.yellow)
+                                            Text("\(repo.stargazers_count)").font(.caption)
+                                            
+                                            Spacer()
+                                            
+                                            if let language = repo.language {
+                                                Text(language)
+                                                    .font(.caption)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(Color.blue.opacity(0.1))
+                                                    .cornerRadius(6)
+                                            }
                                         }
                                     }
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
-                                // ------------------
-                                
+                                .tint(.primary)
                             }
-                            .tint(.primary) // Keeps the text black/white instead of hyperlink blue
                         }
+                        // ---------------------------
+                        
                     }
+                    .listStyle(.plain) // Changes the list style so it stretches edge-to-edge
                 }
             }
             .navigationTitle("GitTrack")
+            .navigationBarTitleDisplayMode(.inline) // Makes the main title smaller to save space
         }
     }
 }
