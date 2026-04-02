@@ -1,5 +1,5 @@
 # --- Security / Secrets ---
-Secrets.plist
+**/Secrets.plist
 
 # --- Xcode ---
 build/
@@ -19,7 +19,8 @@ DerivedData
 *.ipa
 *.xcuserstate
 project.xcworkspace
-Secrets.plist
+
+
 # --- OS X ---
 .DS_Store
 
