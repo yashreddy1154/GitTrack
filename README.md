@@ -128,4 +128,6 @@ This project is open source and available for learning purposes.
 
 ---
 
+
 *Built with ❤️ using SwiftUI as a portfolio project for iOS internship preparation.*
+
