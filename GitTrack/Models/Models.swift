@@ -61,3 +61,5 @@ struct Repository: Codable, Identifiable, Hashable {
         case htmlURL         = "html_url"
     }
 }
+
+
