@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Combine
 
 // MARK: - Sort Option
 /// Simple enum the user can pick from to reorder the repo list.
